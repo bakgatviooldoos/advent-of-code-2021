@@ -13,10 +13,8 @@
   (foldl (lambda (line counts)
            (map (lambda (bit count)
                   (if (zero? bit)
-                      (cons (add1 (car count))
-                            (cdr count))
-                      (cons (car count)
-                            (add1 (cdr count)))))
+                      (cons (add1 (car count)) (cdr count))
+                      (cons (car count) (add1 (cdr count)))))
                 line counts))
          (make-list (length (car report)) (cons 0 0))
          report))
@@ -37,12 +35,9 @@
   (define (rating-filter pred report)
     (let loop ([index  0]
                [report report])
-      (cond [(empty? (cdr report))
-             (car report)]
+      (cond [(empty? (cdr report)) (car report)]
             [else
-             (define bit-count
-               (list-ref (count-bits report) index))
-             
+             (define bit-count (list-ref (count-bits report) index))
              (loop (add1 index)
                    (filter (lambda (line)
                              (equal? (pred bit-count) (list-ref line index)))
@@ -60,7 +55,7 @@
 
 (displayln (format "power usage rating:\n~a"
  (power-usage-rating diagnostic-report)))
+(newline)
 
 (displayln (format "life-support rating:\n~a"
  (life-support-rating diagnostic-report)))
-
