@@ -38,25 +38,22 @@
     (cond [(zero? repeat) pair->count]
           [else
            (define next-pair->count (make-hash))
-           
-           (for ([pair (hash-keys pair->count)])
-             (define pair1 (cons (car pair) (hash-ref rules pair)))
-             (define pair2 (cons (hash-ref rules pair) (cdr pair)))
-
-             (hash-set! next-pair->count
-                        pair1
-                        (+ (hash-ref pair->count pair)
-                           (hash-ref! next-pair->count pair1 0)))
-             (hash-set! next-pair->count
-                        pair2
-                        (+ (hash-ref pair->count pair)
-                           (hash-ref! next-pair->count pair2 0))))
-
+           (hash-for-each
+            pair->count
+            (lambda (pair count)
+              (define rule  (hash-ref rules pair))
+              (define pair1 (cons (car pair) rule))
+              (define pair2 (cons rule (cdr pair)))
+              (hash-set! next-pair->count
+                         pair1
+                         (+ count (hash-ref! next-pair->count pair1 0)))
+              (hash-set! next-pair->count
+                         pair2
+                         (+ count (hash-ref! next-pair->count pair2 0)))))
            (loop next-pair->count (sub1 repeat))])))
 
 (define (count-elements pair->count)
   (define element->count (make-hash))
-
   (hash-for-each
    pair->count
    (lambda (pair count)
@@ -91,4 +88,3 @@
         [counts
          (count-elements polymerized)])
    (- (apply max (hash-values counts)) (apply min (hash-values counts))))))
-
