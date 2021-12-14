@@ -63,9 +63,8 @@
                                   (car point)
                                   (cdr point))))
                lowest-points))))
+(newline)
 
 (displayln (format "product of the sizes of the 3 largest basins:\n~a"
- (foldl * 1
-        (map length
-             (take (sort basins #:key length >) 3)))))
-
+ (apply * (map length
+               (take (sort basins #:key length >) 3)))))
