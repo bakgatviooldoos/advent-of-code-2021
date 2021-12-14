@@ -30,22 +30,22 @@
           [else
            (loop (cdr line) (cons (car line) open))])))
 
-(displayln (format "syntax checker score and auto-complete score of lines:\n~a"
+(define open->points
+  (hash "(" 1
+        "[" 2
+        "{" 3
+        "<" 4))
+
+(define close->points
+  (hash ")"     3
+        "]"    57
+        "}"  1197
+        ">" 25137))
+
+(displayln (format "total syntax checker and auto-complete scores of lines:\n~a"
  (let loop ([stx-check-points 0]
             [auto-cmpl-scores (list)]
             [lines            subsystem-lines])
-   (define open->points
-     (hash "(" 1
-           "[" 2
-           "{" 3
-           "<" 4))
-
-   (define close->points
-     (hash ")"     3
-           "]"    57
-           "}"  1197
-           ">" 25137))
-   
    (cond [(empty? lines)
           (define middle-score
             (list-ref (sort auto-cmpl-scores <)
@@ -75,4 +75,3 @@
                  (loop stx-check-points
                        (cons score auto-cmpl-scores)
                        (cdr lines))])]))))
-
