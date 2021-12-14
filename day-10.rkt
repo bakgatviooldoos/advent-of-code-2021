@@ -1,66 +1,77 @@
 #lang racket
 
-(define heightmap
-  (with-input-from-file "day-9-1.txt"
+(define subsystem-lines
+  (with-input-from-file "day-10-1.txt"
     (lambda ()
       (for/list ([l (in-lines)])
-          (map string->number (filter non-empty-string? (string-split l "")))))))
+          (filter non-empty-string? (string-split l ""))))))
 
-(define (get-height heights i j)
-  (list-ref (list-ref heights i) j))
+(define (close? bracket)
+  (or (equal? ")" bracket)
+      (equal? "]" bracket)
+      (equal? "}" bracket)
+      (equal? ">" bracket)))
+  
+(define (parse-line line)
+  (define bracket->number
+    (hash "(" +1 ")" -1
+          "[" +2 "]" -2
+          "{" +3 "}" -3
+          "<" +4 ">" -4))
+  
+  (let loop ([line line]
+             [open (list)])
+    (cond [(empty? line) open]
+          [(close? (car line))
+           (if (not (zero? (+ (hash-ref bracket->number (car line))
+                              (hash-ref bracket->number (car open)))))
+               line
+               (loop (cdr line) (cdr open)))]
+          [else
+           (loop (cdr line) (cons (car line) open))])))
 
-(define (lowest-point? heights i j)
-  (define point (get-height heights i j))
-  (define up    (get-height heights (- i 1) j))
-  (define right (get-height heights i (+ j 1)))
-  (define down  (get-height heights (+ i 1) j))
-  (define left  (get-height heights i (- j 1)))
+(define open->points
+  (hash "(" 1
+        "[" 2
+        "{" 3
+        "<" 4))
 
-  (and (< point up) (< point right) (< point down) (< point left)))
+(define close->points
+  (hash ")"     3
+        "]"    57
+        "}"  1197
+        ">" 25137))
 
-(define lowest-points
-  (let ([aug-heights
-         (append (list (append `(,0) (map add1 (first heightmap)) `(,0)))
-                 (map (lambda (row)
-                        (append `(,(add1 (first row))) row `(,(add1 (last row)))))
-                      heightmap)
-                 (list (append `(,0) (map add1 (last heightmap)) `(,0))))])
-    (for*/list ([i (in-range 1 (add1 (length heightmap)))]
-                [j (in-range 1 (add1 (length (first heightmap))))]
-                #:when (lowest-point? aug-heights i j))
-      (cons (sub1 i) (sub1 j)))))
-
-(define basins
-  (let ([aug-heights
-         (append (list (make-list (+ 2 (length (first heightmap))) 9))
-                 (map (lambda (row)
-                        (append `(,9) row `(,9)))
-                      heightmap)
-                 (list (make-list (+ 2 (length (first heightmap))) 9)))]
-        [known-points (mutable-set)])
-    (define (map-basin-around i j)
-      (define height (get-height aug-heights i j))
-      (set-add! known-points (cons i j))
-      (cond [(equal? 9 height) (list)]
-            [else
-             (cons height
-                   (apply append
-                          (for/list ([oi '(-1 +0 +1 +0)]
-                                     [oj '(+0 +1 +0 -1)]
-                                     #:unless (set-member? known-points (cons (+ i oi) (+ j oj))))
-                            (map-basin-around (+ i oi) (+ j oj)))))]))
-    (map (lambda (point)
-           (map-basin-around (add1 (car point)) (add1 (cdr point))))
-         lowest-points)))
-
-(displayln (format "sum of the risk levels of the lowest points:\n~a"
- (apply + (map (lambda (point)
-                 (add1 (get-height heightmap
-                                  (car point)
-                                  (cdr point))))
-               lowest-points))))
-(newline)
-
-(displayln (format "product of the sizes of the 3 largest basins:\n~a"
- (apply * (map length
-               (take (sort basins #:key length >) 3)))))
+(displayln (format "total syntax checker and auto-complete scores of lines:\n~a"
+ (let loop ([stx-check-points 0]
+            [auto-cmpl-scores (list)]
+            [lines            subsystem-lines])
+   (cond [(empty? lines)
+          (define middle-score
+            (list-ref (sort auto-cmpl-scores <)
+                      (/ (sub1 (length auto-cmpl-scores)) 2)))
+          (cons stx-check-points middle-score)]
+         [else
+          (define parsed
+            (parse-line (car lines)))
+         
+          (cond [(empty? parsed)
+                 (loop stx-check-points auto-cmpl-scores (cdr lines))]
+                [(close? (car parsed))
+                 (loop (+ stx-check-points
+                          (hash-ref close->points (car parsed)))
+                       auto-cmpl-scores
+                       (cdr lines))]
+                [else
+                 (define score
+                   (let loop ([score 0]
+                              [open  parsed])
+                     (if (empty? open)
+                         score
+                         (loop (+ (* 5 score)
+                                  (hash-ref open->points (car open)))
+                               (cdr open)))))
+                
+                 (loop stx-check-points
+                       (cons score auto-cmpl-scores)
+                       (cdr lines))])]))))
