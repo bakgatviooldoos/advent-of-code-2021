@@ -65,6 +65,7 @@
 
 (displayln (format "number of paths that visit each small cave at most once:\n~a"
  (length (find-paths-in adjacent-caves #:where transition-fun1))))
+(newline)
 
 (displayln (format (string-append "number of paths that visit at most one small cave twice,\n"
                                   "except \"start\" and \"end\", and every other small cave at most once:\n~a")
