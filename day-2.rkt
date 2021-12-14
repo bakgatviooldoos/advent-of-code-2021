@@ -4,9 +4,9 @@
   (with-input-from-file "day-2-1.txt"
     (lambda ()
       (for/list ([l (in-lines)])
-        (let ([s (string-split l " ")])
-          (cons (string->symbol (first s))
-                (string->number (second s))))))))
+        (define split (string-split l " "))
+        (cons (string->symbol (first split))
+              (string->number (second split)))))))
 
 (define (follow-method-1 commands)
   (foldl (lambda (command state)
@@ -14,12 +14,12 @@
            (define depth    (second state))
            
            (match command
-             [`(forward . ,X) (list (+ distance X)
+             [`(forward . ,x) (list (+ distance x)
                                     depth)]
-             [`(up . ,X)      (list distance
-                                    (- depth X))]
-             [`(down . ,X)    (list distance
-                                    (+ depth X))]))
+             [`(up . ,x)      (list distance
+                                    (- depth x))]
+             [`(down . ,x)    (list distance
+                                    (+ depth x))]))
          '(0 0)
          commands))
 
@@ -30,22 +30,22 @@
            (define aim      (third state))
            
            (match command
-             [`(forward . ,X) (list (+ distance X)
-                                    (+ depth (* aim X))
+             [`(forward . ,x) (list (+ distance x)
+                                    (+ depth (* aim x))
                                     aim)]
-             [`(up . ,X)      (list distance
+             [`(up . ,x)      (list distance
                                     depth
-                                    (- aim X))]
-             [`(down . ,X)    (list distance
+                                    (- aim x))]
+             [`(down . ,x)    (list distance
                                     depth
-                                    (+ aim X))]))
+                                    (+ aim x))]))
          '(0 0 0)
          commands))
-
 
 (define state-1 (follow-method-1 commands))
 (displayln (format "product of horizontal position and depth with naive control usage:\n~a"
  (* (first state-1) (second state-1))))
+(newline)
 
 (define state-2 (follow-method-2 commands))
 (displayln (format "product of horizontal position and depth with proper control usage:\n~a"
