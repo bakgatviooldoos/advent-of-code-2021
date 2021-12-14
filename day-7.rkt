@@ -31,6 +31,7 @@
  (optimal-point
   crab-submarine-distances
   #:measure-with norm-distance-function)))
+(newline)
 
 (displayln (format "optimal point and fuel consumption with crabwise fuel usage:\n~a"
  (optimal-point
