@@ -1,6 +1,6 @@
 #lang racket
 
-(define folds-and-paper
+(define-values (fold-lines manual-paper)
   (with-input-from-file "day-13-1.txt"
     (lambda ()
       (define points
@@ -31,7 +31,7 @@
       (define max-x (car (argmax car points)))
       (define max-y (cdr (argmax cdr points)))
 
-      (cons
+      (values
        folds
        (let loop ([index  0]
                   [points points])
@@ -81,9 +81,10 @@
  (apply +
         (map (lambda (row)
                (count (lambda (point) (equal? "#" point)) row))
-             (fold-on (first (car folds-and-paper)) (cdr folds-and-paper))))))
+             (fold-on (first fold-lines) manual-paper)))))
+(newline)
 
 (displayln (format "activation code after completing folds:\n~a"
  (string-join (map string-join
-                   (fold-on-all (car folds-and-paper) (cdr folds-and-paper)))
+                   (fold-on-all fold-lines manual-paper))
               "\n")))
