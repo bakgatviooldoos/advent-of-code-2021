@@ -15,6 +15,7 @@
 
 (displayln (format "number of depth increases considering 1 measurement at a time:\n~a"
  (count-window-increases 1 sonar-depths)))
+(newline)
 
 (displayln (format "number of depth increases considering 3 measurements at a time:\n~a"
  (count-window-increases 3 sonar-depths)))
