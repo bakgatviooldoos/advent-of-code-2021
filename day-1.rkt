@@ -13,7 +13,7 @@
          (+ (if (< last-sum curr-sum) 1 0)
             (count-window-increases run (cdr depths) curr-sum))]))
 
-(displayln (format "number of depth increases considering every depth measurement:\n~a"
+(displayln (format "number of depth increases considering 1 measurement at a time:\n~a"
  (count-window-increases 1 sonar-depths)))
 
 (displayln (format "number of depth increases considering 3 measurements at a time:\n~a"
