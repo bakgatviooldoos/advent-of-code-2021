@@ -58,6 +58,7 @@
                                  (if (member n '(1 4 7 8)) 1 0))
                                numeral)))
                fixed-outputs))))
+(newline)
 
 (displayln (format "sum of outputs of the fixed 4-digit displays:\n~a"
  (apply + (map numeral->number fixed-outputs))))
