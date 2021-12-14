@@ -25,7 +25,6 @@
                         (append `(,(add1 (first row))) row `(,(add1 (last row)))))
                       heightmap)
                  (list (append `(,0) (map add1 (last heightmap)) `(,0))))])
-  
     (for*/list ([i (in-range 1 (add1 (length heightmap)))]
                 [j (in-range 1 (add1 (length (first heightmap))))]
                 #:when (lowest-point? aug-heights i j))
@@ -39,11 +38,9 @@
                       heightmap)
                  (list (make-list (+ 2 (length (first heightmap))) 9)))]
         [known-points (mutable-set)])
-
     (define (map-basin-around i j)
       (define height (get-height aug-heights i j))
       (set-add! known-points (cons i j))
-
       (cond [(equal? 9 height) (list)]
             [else
              (cons height
@@ -52,7 +49,6 @@
                                      [oj '(+0 +1 +0 -1)]
                                      #:unless (set-member? known-points (cons (+ i oi) (+ j oj))))
                             (map-basin-around (+ i oi) (+ j oj)))))]))
-    
     (map (lambda (point)
            (map-basin-around (add1 (car point)) (add1 (cdr point))))
          lowest-points)))
