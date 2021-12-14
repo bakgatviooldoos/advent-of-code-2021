@@ -1,25 +1,28 @@
 #lang racket
 
-(define bingo-input
+(define-values (bingo-numbers bingo-boards)
   (with-input-from-file "day-4-1.txt"
     (lambda ()
-      (for/list ([l (in-lines)]
-                 #:when (non-empty-string? l))
-        l))))
+      (define bingo-input
+        (for/list ([l (in-lines)]
+                   #:when (non-empty-string? l))
+          l))
 
-(define bingo-numbers
-  (map string->number (string-split (first bingo-input) ",")))
+      (define numbers
+        (map string->number (string-split (first bingo-input) ",")))
 
-(define bingo-boards
-  (let loop ([boards (cdr bingo-input)])
-    (if (empty? boards)
-        (list)
-        (cons (apply append
-                     (map (lambda (row)
-                            (map string->number
-                                 (filter non-empty-string? (string-split row " "))))
-                          (take boards 5)))
-              (loop (drop boards 5))))))
+      (define boards
+        (let loop ([boards (cdr bingo-input)])
+          (if (empty? boards)
+              (list)
+              (cons (apply append
+                           (map (lambda (row)
+                                  (map string->number
+                                       (filter non-empty-string? (string-split row " "))))
+                                (take boards 5)))
+                    (loop (drop boards 5))))))
+      
+      (values numbers boards))))
 
 (define (mark-boards number boards)
   (for/list ([board boards])
@@ -38,25 +41,19 @@
       (+ col-index (* 5 row-index)))))
 
 (define (board-wins? board)
-  (or
-   (ormap (lambda (row)
-            (andmap (lambda (index)
-                      (false? (list-ref board index)))
-                    row))
-          rows)
-   (ormap (lambda (col)
-            (andmap (lambda (index)
-                      (false? (list-ref board index)))
-                    col))
-          cols)))
+  (define (bingo? dimension)
+    (andmap (lambda (index)
+              (not (list-ref board index)))
+            dimension))
+  (or (ormap bingo? rows) (ormap bingo? cols)))
 
 (define (score bingo-state)
   (define (bingo-score winning-number board)
     (* winning-number
-       (foldl + 0 (filter-not false? board))))
+       (apply + (filter identity board))))
+  
   (define winners (first bingo-state))
   (define numbers (second bingo-state))
-  (define boards  (third bingo-state))
   (map (lambda (winner)
          (bingo-score (car numbers) winner))
        winners))
@@ -65,22 +62,23 @@
   (define-values (winners busy)
     (partition board-wins? (mark-boards (car numbers) boards)))
 
-  (cond [(empty? winners)
-         (play-bingo busy (cdr numbers))]
+  (cond [(not (empty? winners))
+         (list winners numbers busy)]
         [else
-         (list winners numbers busy)]))
+         (play-bingo busy (cdr numbers))]))
 
 (define (play-bingo-all boards numbers)
   (define bingo-state  (play-bingo boards numbers))
   (define numbers-left (second bingo-state))
   (define boards-left  (third bingo-state))
-
+  
   (if (empty? boards-left)
       bingo-state
       (play-bingo-all boards-left (cdr numbers-left))))
 
-(score (play-bingo bingo-boards bingo-numbers))
-(score (play-bingo-all bingo-boards bingo-numbers))
+(displayln (format "final score of first winning board:\n~a"
+ (car (score (play-bingo bingo-boards bingo-numbers)))))
+(newline)
 
-
-  
+(displayln (format "final score of final winning board:\n~a"
+ (car (score (play-bingo-all bingo-boards bingo-numbers)))))
