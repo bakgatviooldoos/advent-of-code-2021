@@ -10,13 +10,11 @@
         (define group? (findf (lambda (group)
                                 (equal? age (first group)))
                               (group-by identity age-groups)))
-        (values age (if (false? group?) 0 (length group?)))))))
+        (values age (if (not group?) 0 (length group?)))))))
 
 (define (age-one-day age-groups)
-  (define N (hash-count age-groups))
-  
   (for/hash ([age (hash-keys age-groups)])
-    (values age (+ (hash-ref age-groups (modulo (add1 age) N))
+    (values age (+ (hash-ref age-groups (modulo (add1 age) (hash-count age-groups)))
                    (if (equal? 6 age) (hash-ref age-groups 0) 0)))))
 
 (define (age-by fish-ages days)
@@ -25,10 +23,11 @@
       (age-by (age-one-day fish-ages) (sub1 days))))
 
 (define (total-fish age-groups)
-  (foldl + 0 (hash-values age-groups)))
+  (apply + (hash-values age-groups)))
 
 (displayln (format "total number of lanternfish after 80 days:\n~a"
  (total-fish (age-by lanternfish-ages 80))))
+(newline)
 
 (displayln (format "total number of lanternfish after 256 days:\n~a"
  (total-fish (age-by lanternfish-ages 256))))
