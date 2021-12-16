@@ -72,13 +72,9 @@
                     
                     (cons total-risk (cons risk-here (cdr minimal-risks)))])]
             [else
-             (define conns    (left-up-right-down i j))
-             (define counters (relevant-counters conns))
-             
-             (cond [(empty? counters) counter]
-                   [else
-                    (extend-updated-risks conns)
-                    (sub1 counter)])]))
+             (define counters
+               (relevant-counters (left-up-right-down i j)))
+             (if (empty? counters) counter (sub1 counter))]))
     (set-for-each
      updated-risks
      (lambda (conn)
