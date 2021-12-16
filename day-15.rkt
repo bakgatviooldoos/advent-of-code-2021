@@ -9,83 +9,83 @@
 (define (least-risky-path risk-levels)
   (define size (length risk-levels))
 
+  (define (get-risk i j)
+    (list-ref (list-ref risk-levels i) j))
+
   (define risk-counters
     (list->vector (map (lambda (row)
                          (list->vector row))
                        risk-levels)))
   (vector-set! (vector-ref risk-counters 0) 0 '(0 0))
-  
-  (define (get-risk i j)
-    (list-ref (list-ref risk-levels i) j))
+
+  (define (get-counter i j)
+    (vector-ref (vector-ref risk-counters i) j))
+
+  (define (get-list-counters positions)
+    (filter-map (lambda (position)
+                  (define counter (get-counter (car position) (cdr position)))
+                  (if (list? counter) counter #f))
+                positions))
 
   (define (left-up-right-down i j)
-      (for/list ([oi '(+0 -1 +0 +1)]
-                 [oj '(-1 +0 +1 +0)]
-                 #:when (and (<= 0 (+ i oi) (sub1 size))
-                             (<= 0 (+ j oj) (sub1 size))))
-        (cons (+ i oi) (+ j oj))))
+    (for/list ([oi '(+0 -1 +0 +1)]
+               [oj '(-1 +0 +1 +0)]
+               #:when (and (<= 0 (+ i oi) (sub1 size))
+                           (<= 0 (+ j oj) (sub1 size))))
+      (cons (+ i oi) (+ j oj))))
   
-  (let loop ([updated-risks
+  (let loop ([invalidated
               (mutable-set (cons 0 1) (cons 1 0))])
-    (define (get-counter i j)
-      (vector-ref (vector-ref risk-counters i) j))
-
-    (define (relevant-counters conns)
-      (filter-map (lambda (conn)
-                    (define counter (get-counter (car conn) (cdr conn)))
-                    (if (list? counter) counter #f))
-                  conns))
-
-    (define (extend-updated-risks conns)
-      (set-union! updated-risks (list->set conns)))
+    (define (add-invalidated positions)
+      (set-union! invalidated (list->set positions)))
 
     (define (minimize-risk i j)
-      (define counter (get-counter i j))
+      (define this-counter (get-counter i j))
       
-      (cond [(list? counter)
-             (set-remove! updated-risks (cons i j))  
-             (define conns    (left-up-right-down i j))
-             (define counters (relevant-counters conns))
+      (cond [(list? this-counter)
+             (set-remove! invalidated (cons i j))  
+             (define adj-positions (left-up-right-down i j))
+             (define adj-counters  (get-list-counters adj-positions))
              
-             (cond [(empty? counters) counter]
+             (cond [(empty? adj-counters) this-counter]
                    [else
-                    (define minimal-risks (argmin car counters))
-                    (define risk-here     (get-risk i j))
-                    (define total-risk    (+ risk-here (car minimal-risks)))
+                    (define minimal-risks (argmin car adj-counters))
+                    (define this-risk     (get-risk i j))
+                    (define total-risk    (+ this-risk (car minimal-risks)))
                     
-                    (cond [(<= (car counter) total-risk) counter]
+                    (cond [(<= (car this-counter) total-risk) this-counter]
                           [else
-                           (extend-updated-risks conns)
-                           (cons total-risk (cons risk-here (cdr minimal-risks)))])])]
-            [(zero? counter)
-             (define conns    (left-up-right-down i j))
-             (define counters (relevant-counters conns))
+                           (add-invalidated adj-positions)
+                           (cons total-risk (cons this-risk (cdr minimal-risks)))])])]
+            [(zero? this-counter)
+             (define adj-positions (left-up-right-down i j))
+             (define adj-counters  (get-list-counters adj-positions))
              
-             (cond [(empty? counters) counter]
+             (cond [(empty? adj-counters) this-counter]
                    [else
-                    (set-remove! updated-risks (cons i j))
-                    (extend-updated-risks conns)
+                    (set-remove! invalidated (cons i j))
+                    (add-invalidated adj-positions)
                            
-                    (define minimal-risks (argmin car counters))
-                    (define risk-here     (get-risk i j))
-                    (define total-risk    (+ risk-here (car minimal-risks)))
+                    (define minimal-risks (argmin car adj-counters))
+                    (define this-risk     (get-risk i j))
+                    (define total-risk    (+ this-risk (car minimal-risks)))
                     
-                    (cons total-risk (cons risk-here (cdr minimal-risks)))])]
+                    (cons total-risk (cons this-risk (cdr minimal-risks)))])]
             [else
-             (define counters
-               (relevant-counters (left-up-right-down i j)))
-             (if (empty? counters) counter (sub1 counter))]))
+             (define adj-counters
+               (get-list-counters (left-up-right-down i j)))
+             (if (empty? adj-counters) this-counter (sub1 this-counter))]))
     (set-for-each
-     updated-risks
-     (lambda (conn)
+     invalidated
+     (lambda (position)
        (vector-set!
-        (vector-ref risk-counters (car conn))
-        (cdr conn)
-        (minimize-risk (car conn) (cdr conn)))))
+        (vector-ref risk-counters (car position))
+        (cdr position)
+        (minimize-risk (car position) (cdr position)))))
     
-    (if (set-empty? updated-risks)
+    (if (set-empty? invalidated)
         (vector-ref (vector-ref risk-counters (sub1 size)) (sub1 size))
-        (loop updated-risks))))
+        (loop invalidated))))
 
 (define (displace-risk r m n)
   (define-values (a b)
