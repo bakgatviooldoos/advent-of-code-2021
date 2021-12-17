@@ -13,9 +13,8 @@
     (list-ref (list-ref risk-levels i) j))
 
   (define risk-counters
-    (list->vector (map (lambda (row)
-                         (list->vector row))
-                       risk-levels)))
+    (for/vector ([row risk-levels])
+      (list->vector row)))
   (vector-set! (vector-ref risk-counters 0) 0 '(0 0))
 
   (define (get-counter i j)
