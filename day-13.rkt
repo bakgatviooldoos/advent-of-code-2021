@@ -12,10 +12,10 @@
                   (cons (cons (string->number (first position))
                               (string->number (second position)))
                         (loop (read-line)))]))
-         (lambda (x y)
-           (if (= (cdr x) (cdr y))
-               (< (car x) (car y))
-               (< (cdr x) (cdr y))))))
+         (lambda (a b)
+           (if (= (cdr a) (cdr b))
+               (< (car a) (car b))
+               (< (cdr a) (cdr b))))))
 
       (define folds
         (let loop ([line (read-line)])
