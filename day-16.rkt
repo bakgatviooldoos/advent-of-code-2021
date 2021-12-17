@@ -2,7 +2,7 @@
 
 (define (hex->binary v)
   (~a (number->string (string->number v 16) 2)
-      #:min-width 4 #:pad-string "0" #:align 'right))
+      #:width 4 #:pad-string "0" #:align 'right))
 
 (define BITS-transmission
   (with-input-from-file "day-16-1.txt"
@@ -14,12 +14,12 @@
 (define (bits->number b)
   (string->number (list->string b) 2))
 
-(define ($packet input)
+(define (read-packet input)
   (values (bits->number (take input 3))
           (bits->number (take (drop input 3) 3))
           (drop input 6)))
 
-(define ($literal input)
+(define (read-literal input)
   (let loop ([input input]
              [parts (list)])
     (cond [(equal? #\0 (first input))
@@ -29,7 +29,7 @@
           [else
            (loop (drop input 5) (cons (cdr (take input 5)) parts))])))
 
-(define ($operator input)
+(define (read-operator input)
   (cond [(equal? #\0 (first input))
          (values 'sub-packets-bits
                  (bits->number (cdr (take input 16)))
@@ -43,16 +43,16 @@
   (cond [(empty? input) (values 'eop input)]
         [else
          (define-values (version type-id content-bits)
-           ($packet input))
+           (read-packet input))
 
          (cond [(equal? 4 type-id)
-                (define-values (literal-value rest)
-                  ($literal content-bits))
-                (values (list type-id version literal-value)
+                (define-values (value rest)
+                  (read-literal content-bits))
+                (values (list type-id version value)
                         rest)]
                [else
                 (define-values (count-id count content)
-                  ($operator content-bits))
+                  (read-operator content-bits))
 
                 (cond [(equal? 'sub-packets-bits count-id)
                        (define-values (sub-packets rest)
@@ -81,7 +81,7 @@
 
 (define (sum-versions ast)
   (match ast
-    [`(4 ,version ,value)
+    [`(4        ,version ,value)
      version]
     [`(,type-id ,version ,sub-packets)
      (+ version (apply + (map sum-versions sub-packets)))]))
