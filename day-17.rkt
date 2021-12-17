@@ -21,13 +21,14 @@
              [py 0]
              [vx vx]
              [vy vy])
-    (if (or (< (cdr x-range) px)
-            (< py (car y-range)))
-        #f
-        (if (and (<= (car x-range) px (cdr x-range))
-                 (<= (car y-range) py (cdr y-range)))
-            #t
-            (loop (+ px vx) (+ py vy) (- vx (sgn vx)) (- vy 1))))))
+    (cond [(or (< (cdr x-range) px)
+               (< py (car y-range)))
+           #f]
+          [(and (<= (car x-range) px (cdr x-range))
+                (<= (car y-range) py (cdr y-range)))
+           #t]
+          [else
+           (loop (+ px vx) (+ py vy) (- vx (sgn vx)) (- vy 1))])))
 
 (define valid-initial-velocities
  (for*/list ([vx (in-range (add1 (cdr x-range)))]
