@@ -21,7 +21,6 @@
                                        (filter non-empty-string? (string-split row " "))))
                                 (take boards 5)))
                     (loop (drop boards 5))))))
-      
       (values numbers boards))))
 
 (define (mark-boards number boards)
@@ -62,10 +61,9 @@
   (define-values (winners busy)
     (partition board-wins? (mark-boards (car numbers) boards)))
 
-  (cond [(not (empty? winners))
-         (list winners numbers busy)]
-        [else
-         (play-bingo busy (cdr numbers))]))
+  (if (not (empty? winners))
+      (list winners numbers busy)
+      (play-bingo busy (cdr numbers))))
 
 (define (play-bingo-all boards numbers)
   (define bingo-state  (play-bingo boards numbers))
