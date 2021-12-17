@@ -52,12 +52,12 @@
            row)))
   (cons part-2->3 (cdr part-1->2)))
 
-(define (simulate steps energy-levels [flashes 0])
+(define (simulate energy-levels [flashes 0] #:repeat steps)
   (cond [(zero? steps)
          (cons energy-levels flashes )]
         [else
          (define one-step (simulate-step energy-levels))
-         (simulate (sub1 steps) (car one-step) (+ flashes (cdr one-step)))]))
+         (simulate (car one-step) (+ flashes (cdr one-step)) #:repeat (sub1 steps))]))
 
 (define (find-synchronisation energy-levels [steps 0])
   (cond [(andmap (lambda (row)
@@ -69,7 +69,7 @@
          (find-synchronisation (car one-step) (add1 steps))]))
 
 (displayln (format "number of flashes after 100 steps:\n~a"
- (cdr (simulate 100 octopus-energy-levels))))
+ (cdr (simulate octopus-energy-levels #:repeat 100))))
 (newline)
 
 (displayln (format "number of steps until octopuses synchronise:\n~a"
