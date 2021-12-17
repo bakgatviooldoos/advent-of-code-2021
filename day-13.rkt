@@ -5,28 +5,27 @@
     (lambda ()
       (define points
         (sort 
-         (let loop ()
-           (define line (read-line))
+         (let loop ([line (read-line)])
            (cond [(equal? "" line) (list)]
                  [else
                   (define position (string-split line ","))
                   (cons (cons (string->number (first position))
                               (string->number (second position)))
-                        (loop))]))
+                        (loop (read-line)))]))
          (lambda (x y)
            (if (= (cdr x) (cdr y))
                (< (car x) (car y))
                (< (cdr x) (cdr y))))))
 
       (define folds
-        (let loop ()
-          (define line (read-line))
+        (let loop ([line (read-line)])
           (cond [(eof-object? line) (list)]
                 [else
-                 (define fold (string-split (substring line 11) "="))
+                 (define fold
+                   (string-split (substring line 11) "="))
                  (cons (cons (string->symbol (first fold))
                              (string->number (second fold)))
-                       (loop))])))
+                       (loop (read-line)))])))
 
       (define max-x (car (argmax car points)))
       (define max-y (cdr (argmax cdr points)))
@@ -40,10 +39,9 @@
                 (define-values (points-in-row rest)
                   (splitf-at points (lambda (point)
                                       (equal? index (cdr point)))))
-                (define points-at-x (map car points-in-row))
                 (cons
                  (build-list (add1 max-x) (lambda (x)
-                                            (if (member x points-at-x) "#" " ")))
+                                            (if (assoc x points-in-row) "#" " ")))
                  (loop (add1 index) rest))]))))))
 
 (define (combine a b)
@@ -56,14 +54,10 @@
   (match line
     [`(x . ,n)
      (for/list ([row paper])
-       (define-values (lhs rhs)
-         (split-at row n))
-
+       (define-values (lhs rhs) (split-at row n))
        (reverse (combine (cdr rhs) (reverse lhs))))]
     [`(y . ,n)
-     (define-values (top bot)
-       (split-at paper n))
-
+     (define-values (top bot) (split-at paper n))
      (reverse
       (let loop ([bot (cdr bot)]
                  [top (reverse top)])
@@ -77,7 +71,7 @@
       paper
       (fold-on-all (cdr lines) (fold-on (car lines) paper))))
 
-(displayln (format "number of dots visible after first fold:\n~a"
+(displayln (format "number of visible dots after first fold:\n~a"
  (apply +
         (map (lambda (row)
                (count (lambda (point) (equal? "#" point)) row))
