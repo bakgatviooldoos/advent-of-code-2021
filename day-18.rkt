@@ -80,7 +80,7 @@
              (cons (loop (rest branch)
                          ((first branch) context))
                    (DOWN context))]
-            [(equal? DOWN (car branch))
+            [(equal? DOWN (first branch))
              (cons (LEFT context)
                    (loop (rest branch)
                          ((first branch) context)))])))
@@ -95,7 +95,7 @@
   (define focus (zipper-cursor zip))
   (zipper (cursor (append (cursor-branch focus) (list branch))
                   (cursor-content focus))
-          (if (equal? car branch)
+          (if (equal? LEFT branch)
               (cons (zipper-context zip) value)
               (cons value (zipper-context zip)))))
 
