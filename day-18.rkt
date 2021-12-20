@@ -211,10 +211,10 @@
 
 (define sum-with-greatest-magnitude
   (let ([combinations
-         (apply append
-                (for*/list ([i (in-range 0 (length snailfish-numbers))]
-                            [j (in-range i (length snailfish-numbers))])
-                  (list (cons j i) (cons i j))))])
+         (for*/list ([i (in-range (length snailfish-numbers))]
+                     [j (in-range (length snailfish-numbers))]
+                     #:unless (equal? i j))
+           (cons i j))])
     (argmax snailfish-magnitude
             (map (lambda (ab)
                    (snailfish-reduce
