@@ -220,7 +220,7 @@
                    (snailfish-reduce
                     (snailfish-add (zip-up (list-ref snailfish-numbers (car ab)))
                                    (list-ref snailfish-numbers (cdr ab)))))
-                 (remove-duplicates combinations)))))
+                 combinations))))
 
 (displayln (format "sum of all the snailfish numbers in the homework assignment:\n~a"
  (snailfish-magnitude sum-of-all-snailfish-numbers)))
