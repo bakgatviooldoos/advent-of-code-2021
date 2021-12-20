@@ -10,7 +10,7 @@
                                         "," " ")
                         " "))
 
-        (let loop ([tokens tokens]
+        (let loop ([tokens  tokens]
                    [numbers (list)])
           (cond [(empty? tokens)
                  numbers]
@@ -125,49 +125,50 @@
          (number? (DOWN content))
          (< 3 (length (cursor-branch focus)))))
 
-  (define (marker? focus)
-    (equal? 'mark (cursor-content focus)))
-
   (define (literal? focus)
     (number? (cursor-content focus)))
+
+  (define (next-literal-left zip)
+    (define go-back
+      (back-past zip DOWN))
+    (and go-back
+         (focus-on (left go-back)
+                   (list down)
+                   literal?)))
+
+  (define (next-literal-down zip)
+    (define go-back
+      (back-past zip LEFT))
+    (and go-back
+         (focus-on (down go-back)
+                   (list left)
+                   literal?)))
   
   (define maybe-explode
     (focus-on zip (list left down) can-explode?))
   
   (cond [(not maybe-explode) #f]
         [else
-         (define marked (swap maybe-explode 'mark))
+         (define swap-zero (swap maybe-explode 0))
          
          (define add-left
-           (let* ([go-back    (back-past marked DOWN)]
-                  [maybe-left (and go-back (focus-on (left go-back)
-                                                     (list down)
-                                                     literal?))])
-             (cond [(not maybe-left) marked]
+           (let* ([maybe-left (next-literal-left swap-zero)])
+             (cond [(not maybe-left) swap-zero]
                    [else
                     (define new-value
                       (+ (LEFT (cursor-content (zipper-cursor maybe-explode)))
                          (cursor-content (zipper-cursor maybe-left))))
-                      
-                    (focus-on (back-past (swap maybe-left new-value) 'all)
-                              (list left down)
-                              marker?)])))
+                    (next-literal-down (swap maybe-left new-value))])))
          
          (define add-down
-           (let* ([go-back    (back-past add-left LEFT)]
-                  [maybe-down (and go-back (focus-on (down go-back)
-                                                     (list left)
-                                                     literal?))])
+           (let* ([maybe-down (next-literal-down add-left)])
              (cond [(not maybe-down) add-left]
                    [else
                     (define new-value
                       (+ (DOWN (cursor-content (zipper-cursor maybe-explode)))
                          (cursor-content (zipper-cursor maybe-down))))
-                    
-                    (focus-on (back-past (swap maybe-down new-value) 'all)
-                              (list left down)
-                              marker?)])))
-         (swap add-down 0)]))
+                    (next-literal-left (swap maybe-down new-value))])))
+         add-down]))
 
 (define (splits? zip)
   (define (can-split? focus)
@@ -211,7 +212,7 @@
 (define sum-with-greatest-magnitude
   (let ([combinations
          (apply append
-                (for*/list ([i (in-range (length snailfish-numbers))]
+                (for*/list ([i (in-range 0 (length snailfish-numbers))]
                             [j (in-range i (length snailfish-numbers))])
                   (list (cons j i) (cons i j))))])
     (argmax snailfish-magnitude
