@@ -4,41 +4,36 @@
                 input-image)
   (with-input-from-file "day-20-1.txt"
     (lambda ()
-      (define (->pixel px)
+      (define (parse-pixel px)
         (if (equal? #\# px) #\1 #\0))
         
       (define algorithm
-        (map ->pixel (string->list (read-line))))
+        (map parse-pixel (string->list (read-line))))
       (read-line)
 
       (define image
         (for/list ([l (in-lines)])
-          (map ->pixel (string->list l))))
+          (map parse-pixel (string->list l))))
 
       (values algorithm image))))
 
 (define (infinite-image base-image layer-count)
-  (define zeroth-layer
-    (let ([layer (make-hash)])
-      (for ([row base-image]
-            [i   (in-naturals 0)])
-        (for ([px row]
-              [j  (in-naturals 0)])
-          (hash-set! layer (cons i j) px)))
-      layer))
-
   (make-hash
-   (cons (cons 0 zeroth-layer)
+   (cons (cons 0 (make-hash
+                  (for*/list ([i (in-range (length base-image))]
+                              [j (in-range (length (first base-image)))])
+                    (cons (cons i j)
+                          (list-ref (list-ref base-image i) j)))))
          (for/list ([index (in-range 1 (add1 layer-count))])
            (cons index (make-hash))))))
 
-(define (enhance inf-image)
+(define (enhance infinite-image)
   (define (get-pixel index i j)
     (cond [(zero? index)
-           (hash-ref! (hash-ref inf-image 0) (cons i j) #\0)]
+           (hash-ref! (hash-ref infinite-image 0) (cons i j) #\0)]
           [else
            (hash-ref!
-            (hash-ref inf-image index)
+            (hash-ref infinite-image index)
             (cons i j)
             (lambda ()
               (define super-pixel
@@ -53,7 +48,7 @@
     (if (equal? #\1 px) 1 0))
 
   (define top-index
-    (apply max (hash-keys inf-image)))
+    (apply max (hash-keys infinite-image)))
 
   (define (unseen-pixels min-i max-i min-j max-j)
     (+ (for/sum ([i (in-range (sub1 min-i) (add1 max-i))])
@@ -66,7 +61,7 @@
 
   (define-values (min-i max-i
                   min-j max-j)
-    (let* ([coords (hash-keys (hash-ref inf-image 0))]
+    (let* ([coords (hash-keys (hash-ref infinite-image 0))]
            [is     (map car coords)]
            [js     (map cdr coords)])
       (values (- (apply min is) top-index) (+ (apply max is) top-index)
