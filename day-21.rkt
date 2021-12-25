@@ -37,7 +37,7 @@
            (loop pawn-1 next-pawn score-1 next-score (add1 turns))])))
 
 (define (play-quantum-dice pawn-1 pawn-2)
-  (define roll-results
+  (define rolls
     (map (lambda (group)
            (cons (first group) (length group)))
          (group-by identity
@@ -50,12 +50,12 @@
     (cond [(<= 21 score-1) 1+0i]
           [(<= 21 score-2) 0+1i]
           [(even? turns)
-           (for/sum ([result roll-results])
+           (for/sum ([result rolls])
              (define-values (next-pawn next-score)
                (play-round pawn-1 score-1 (car result)))
              (* (cdr result) (loop next-pawn pawn-2 next-score score-2 (add1 turns))))]
           [else
-           (for/sum ([result roll-results])
+           (for/sum ([result rolls])
              (define-values (next-pawn next-score)
                (play-round pawn-2 score-2 (car result)))
              (* (cdr result) (loop pawn-1 next-pawn score-1 next-score (add1 turns))))])))
