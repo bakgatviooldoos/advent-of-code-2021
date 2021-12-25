@@ -19,7 +19,7 @@
   (sequence->repeated-generator (range 1 101)))
 
 (define (play-deterministic-dice pawn-1 pawn-2)
-  (define die (100-sided-die))
+  (define roll (100-sided-die))
   
   (let loop
     ([pawn-1 pawn-1] [pawn-2 pawn-2] [score-1 0] [score-2 0] [turns 0])
@@ -29,11 +29,11 @@
            (* score-1 (* 3 turns))]
           [(even? turns)
            (define-values (next-pawn next-score)
-             (play-round pawn-1 score-1 (+ (die) (die) (die))))
+             (play-round pawn-1 score-1 (+ (roll) (roll) (roll))))
            (loop next-pawn pawn-2 next-score score-2 (add1 turns))]
           [else
            (define-values (next-pawn next-score)
-             (play-round pawn-2 score-2 (+ (die) (die) (die))))
+             (play-round pawn-2 score-2 (+ (roll) (roll) (roll))))
            (loop pawn-1 next-pawn score-1 next-score (add1 turns))])))
 
 (define (play-quantum-dice pawn-1 pawn-2)
