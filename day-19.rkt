@@ -19,13 +19,13 @@
                (loop (add1 scanner)
                      (list)
                      (read-line))]
-              [else
-               (define point
-                 (if (string-contains? line "scanner")
-                     (parse-point (read-line))
-                     (parse-point line)))
+              [(string-contains? line "scanner")
                (loop scanner
-                     (cons point beacons)
+                     beacons
+                     (read-line))]
+              [else
+               (loop scanner
+                     (cons (parse-point line) beacons)
                      (read-line))])))))
 
 (define orientations
@@ -91,22 +91,29 @@
              (hash-ref scanner->beacons scanner))
            (values scanner
                    (for/list ([point points])
-                     (sub point (cons ORIGIN points)))))])
+                     (sub point (cons ORIGIN points)))))]
+        [correlated
+         (for/hash ([scanner-1 (hash-keys signatures)])
+           (values scanner-1
+                   (filter (lambda (scanner-2)
+                             (and (not (equal? scanner-1 scanner-2))
+                                  (<= 66 (length (set-intersect (hash-ref signatures scanner-1)
+                                                                (hash-ref signatures scanner-2))))))
+                           (hash-keys signatures))))])
+                          
     (let loop ()
       (define next-oriented
         (for*/or ([scanner-1 (hash-keys oriented)]
-                  [scanner-2 (hash-keys scanner->beacons)]
+                  [scanner-2 (hash-ref correlated scanner-1)]
                   #:unless (hash-has-key? oriented scanner-2))
-          (and (<= 66 (length (set-intersect (hash-ref signatures scanner-1)
-                                             (hash-ref signatures scanner-2))))
-               (for*/or ([point     (hash-ref oriented scanner-1)]
-                         [translate (hash-ref translated scanner-2)]
-                         [direction orientations])
-                 (define transform
-                   (add point (orient translate direction)))
+          (for*/or ([point     (hash-ref oriented scanner-1)]
+                    [translate (hash-ref translated scanner-2)]
+                    [direction orientations])
+            (define transform
+              (add point (orient translate direction)))
 
-                 (and (<= 12 (length (set-intersect transform (hash-ref oriented scanner-1))))
-                      (list scanner-2 (first transform) (rest transform)))))))
+            (and (<= 12 (length (set-intersect transform (hash-ref oriented scanner-1))))
+                 (list scanner-2 (first transform) (rest transform))))))
       (set-add!
        scanners
        (second next-oriented))
